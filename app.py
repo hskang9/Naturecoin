@@ -227,6 +227,7 @@ def new_transaction():
     return jsonify(response), 201
 
 
+
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
@@ -270,6 +271,12 @@ def consensus():
         }
 
     return jsonify(response), 200
+
+@app.route('/', methods=['GET'])
+def index():
+    
+    return '<h1>API server launched</h1>', 200
+
 
 
 if __name__ == '__main__':
