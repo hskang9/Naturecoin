@@ -17,6 +17,11 @@ class Blockchain:
         self.current_transactions = []
         self.chain = []
         self.nodes = set()
+        # Logs for Visualization
+        self.timestamps = ['x', time()]
+        self.num_users = ['users', 0]
+        self.num_transactions = ['transactions', 0]
+        self.num_coins = ['coins', 0]
 
         # Create the genesis block
         self.new_block(previous_hash='1', proof=100)
@@ -292,10 +297,10 @@ def root():
 def visualize():
     
     response = {
-        'timestamps': timestamps,
-        'num_users': num_users,
-        'num_transactions': num_transactions,
-        'num_coins': num_coins, 
+        'timestamps': blockchain.timestamps,
+        'num_users': blockchain.num_users,
+        'num_transactions': blockchain.num_transactions,
+        'num_coins': blockchain.num_coins, 
         'chain': blockchain.chain
     }
 
@@ -304,11 +309,7 @@ def visualize():
     
     return render_template("visualize.html", title = 'Status', response=response)
 
-# Logs for Visualization
-timestamps = ['x', blockchain.chain[0]['timestamp']]
-num_users = ['users', 0]
-num_transactions = ['transactions', 0]
-num_coins = ['coins', 0]
+
 
 # Mine(Confirm a block) from server
 def mine_server():
@@ -371,11 +372,10 @@ def monitor():
                 users.append(transaction['sender']) if transaction['sender'] not in users else None
                 transaction_amnt += int(transaction['amount'])
 
-    num_users.append(len(users))
-    num_transactions.append(len(transactions))
-    num_coins.append(transaction_amnt)
-    start = chain_len - 1
-    idx = start
+    blockchain.num_users.append(len(users))
+    blockchain.num_transactions.append(len(transactions))
+    blockchain.num_coins.append(transaction_amnt)
+    
     
     
 
