@@ -17,6 +17,11 @@ class Blockchain:
         self.current_transactions = []
         self.chain = []
         self.nodes = set()
+        # Logs for Visualization
+        self.timestamps = ['x', time(),]
+        self.num_users = ['users', 0,]
+        self.num_transactions = ['transactions', 0,]
+        self.num_coins = ['coins', 0,]
 
         # Create the genesis block
         self.new_block(previous_hash='1', proof=100)
@@ -109,11 +114,22 @@ class Blockchain:
             'proof': proof,
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
+        
+        # Forge block into blockchain
+        self.chain.append(block)
+
+        
+
+    
+        self.timestamps.append(block['timestamp'])
+        self.num_transactions.append(len(block['transactions']))
+        self.num_users.append(len(set([i['sender'] for i in block['transactions']] + [j['recipient'] for j in block['transactions']])))
+        self.num_coins.append(sum([int(i['amount']) for i in block['transactions']]) + self.num_coins[-1])
+
+        
 
         # Reset the current list of transactions
         self.current_transactions = []
-
-        self.chain.append(block)
         return block
         
     def new_transaction(self, sender, recipient, amount):
@@ -208,7 +224,7 @@ def mine():
     )
     
     # Forge the new Block by adding it to the chain
-    block = blockchain.new_block(proof, last_block['previous_hash'])
+    block = blockchain.new_block(proof)
     with open('chain.json', 'w') as outfile:
         json.dump(blockchain.chain, outfile)
 
@@ -284,30 +300,28 @@ def consensus():
 
     return jsonify(response), 200
 
-@app.route('/', methods=['GET'])
-def root():
-    return render_template("visualize.html", title = 'Index')
 
-@app.route('/visualize', methods=['GET'])
+@app.route('/', methods=['GET'])
 def visualize():
+
+    
     
     response = {
-        'timestamps': timestamps,
-        'num_users': num_users,
-        'num_transactions': num_transactions,
-        'num_coins': num_coins, 
+        'timestamps': blockchain.timestamps,
+        'num_users': blockchain.num_users,
+        'num_transactions': blockchain.num_transactions,
+        'num_coins': blockchain.num_coins, 
         'chain': blockchain.chain
     }
 
-    return render_template("visualize.html", title = 'Status', response=response)
+    print(response)
 
 
+    
+    
+    return render_template("index.html", title = 'Status', response=response)
 
-# Logs for Visualization
-timestamps = ['x', blockchain.chain[0]['timestamp']]
-num_users = ['users', 0]
-num_transactions = ['transactions', 0]
-num_coins = ['coins', 0]
+
 
 # Mine(Confirm a block) from server
 def mine_server():
@@ -324,7 +338,7 @@ def mine_server():
         return 501
 
     blockchain.new_transaction(
-        sender="0",
+        sender="genesis",
         recipient=node_identifier,
         amount=1,
     )
@@ -347,36 +361,9 @@ def mine_server():
 
 
 
-# define the job
+# define the job which has to be monitored
 def monitor():
-
-    r = mine_server()
-    if r == 501:
-        return
-    
-    chain = blockchain.chain
-    chain_len = len(chain)
-    users = []
-    transactions = []
-    datetime = []
-    transaction_amnt = 0
-    # Get information for each request and save it
-    if chain_len > 1:
-        for i in range(1,chain_len):
-            timestamp = chain[i]['timestamp']
-            timestamps.append(timestamp) if timestamp not in timestamps else None
-            for transaction in chain[i]['transactions']:
-                transactions.append(transaction)
-                users.append(transaction['sender']) if transaction['sender'] not in users else None
-                transaction_amnt += float(transaction['amount'])
-
-    num_users.append(len(users))
-    num_transactions.append(len(transactions))
-    num_coins.append(transaction_amnt)
-    start = chain_len - 1
-    idx = start
-    
-    
+    mine_server()   
 
 
 
