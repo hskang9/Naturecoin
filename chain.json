@@ -1,10 +1,1 @@
-// Genesis Block
-[
-  {
-    "index": 1,
-    "timestamp": 1534688509.6405709,
-    "transactions": [],
-    "proof": 100,
-    "previous_hash": "1"
-  }
-]
+[{"index": 1, "transactions": [], "previous_hash": "1", "proof": 100, "timestamp": 1534705997.122334}, {"index": 2, "transactions": [{"amount": "10000", "recipient": "\"sdfd\"", "sender": "\"ddd\""}, {"amount": 1, "recipient": "aeafe34700d746a8b1fa1687e76dbf3c", "sender": "genesis"}], "previous_hash": "55179cab323a8bc5c343911c9dec8ee1c0adbb3422bd8882dae94151076124de", "proof": 35293, "timestamp": 1534706018.345514}, {"index": 3, "transactions": [{"amount": "10000", "recipient": "\"sdfd\"", "sender": "\"ddd\""}, {"amount": 1, "recipient": "aeafe34700d746a8b1fa1687e76dbf3c", "sender": "genesis"}], "previous_hash": "a3bb95616eaf665a1d81fc7e3b227aa84c7ad5c35c8fe1409d23da8ee287c2c3", "proof": 35089, "timestamp": 1534706030.296108}]

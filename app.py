@@ -1,7 +1,7 @@
 import hashlib
 import json
 from time import time
-from urllib.parse import urlparse
+from urlparse import urlparse
 from uuid import uuid4
 import requests
 from flask import Flask, jsonify, request, render_template
@@ -73,14 +73,14 @@ class Blockchain:
         :return: True if our chain was replaced, False if not
         """
 
-        neighbours = self.nodes
+        node_list = self.nodes
         new_chain = None
 
         # We're only looking for chains longer than ours
         max_length = len(self.chain)
 
         # Grab and verify the chains from all the nodes in our network
-        for node in neighbours:
+        for node in node_list:
             response = requests.get('http://{}/chain'.format(node))
 
             if response.status_code == 200:
@@ -99,6 +99,25 @@ class Blockchain:
 
         return False
 
+
+    def broadcast_block(self, block):
+        node_list = self.nodes
+
+        for node in node_list:
+            try:
+                print(block)
+                r = requests.post('http://{}/blocks/add'.format(node), json=block)
+
+
+                print(r.content.message + " in {}".format(node))
+            except:
+                print("Failed to broadcast. The block is already placed or manipulation is suspected.")
+                return
+
+
+
+
+
     def new_block(self, proof, previous_hash=None):
         """
         Create a new Block in the Blockchain
@@ -114,24 +133,26 @@ class Blockchain:
             'proof': proof,
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
-        
+
         # Forge block into blockchain
         self.chain.append(block)
 
-        
+        # Broadcast block to other nodes
+        if len(self.nodes) != 0:
+            self.broadcast_block(block)
 
-    
+
         self.timestamps.append(block['timestamp'])
         self.num_transactions.append(len(block['transactions']))
         self.num_users.append(len(set([i['sender'] for i in block['transactions']] + [j['recipient'] for j in block['transactions']])))
         self.num_coins.append(sum([int(i['amount']) for i in block['transactions']]) + self.num_coins[-1])
 
-        
+
 
         # Reset the current list of transactions
         self.current_transactions = []
         return block
-        
+
     def new_transaction(self, sender, recipient, amount):
         """
         Creates a new transaction to go into the next mined Block
@@ -222,7 +243,7 @@ def mine():
         recipient=node_identifier,
         amount=1,
     )
-    
+
     # Forge the new Block by adding it to the chain
     block = blockchain.new_block(proof)
     with open('chain.json', 'w') as outfile:
@@ -238,6 +259,29 @@ def mine():
     }
     return jsonify(response), 200
 
+# Add broadcast block
+@app.route('/blocks/add', methods=['POST'])
+def add_block():
+    block = request.get_json() or request.form
+
+    # Check the required fields
+    required = ['index', 'previous_hash', 'proof', 'timestamp', 'transactions' ]
+    if not all(k in block for k in required):
+        return 'Missing values', 400
+
+    # Validate the block
+    last_block = blockchain.last_block
+    last_proof = last_block['proof']
+    if blockchain.valid_proof(last_proof, block.get('proof')):
+        blockchain.chain.append(block)
+        response = {
+        'message': 'Block is broadcasted',
+        }
+
+    return jsonify(response), 200
+
+
+
 
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
@@ -252,7 +296,7 @@ def new_transaction():
     index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
 
     response = {'message': 'Transaction will be added to Block {}'.format(index)}
-    return jsonify(response), 201
+    return jsonify(response), 200
 
 
 
@@ -304,21 +348,17 @@ def consensus():
 @app.route('/', methods=['GET'])
 def visualize():
 
-    
-    
+
+
     response = {
         'timestamps': blockchain.timestamps,
         'num_users': blockchain.num_users,
         'num_transactions': blockchain.num_transactions,
-        'num_coins': blockchain.num_coins, 
+        'num_coins': blockchain.num_coins,
         'chain': blockchain.chain
     }
 
     print(response)
-
-
-    
-    
     return render_template("index.html", title = 'Status', response=response)
 
 
@@ -342,7 +382,7 @@ def mine_server():
         recipient=node_identifier,
         amount=1,
     )
-    
+
     # Forge the new Block by adding it to the chain
     block = blockchain.new_block(proof)
     with open('chain.json', 'w') as outfile:
@@ -363,7 +403,7 @@ def mine_server():
 
 # define the job which has to be monitored
 def monitor():
-    mine_server()   
+    mine_server()
 
 
 
