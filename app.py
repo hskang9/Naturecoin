@@ -241,9 +241,9 @@ def mine():
     mine_tx = {'sender': "0", 'recipient':node_identifier, 'amount': 25}
     if mine_tx not in blockchain.current_transactions:
         blockchain.new_transaction(
-            sender=mine_tx.sender,
-            recipient= mine_tx.node_identifier,
-            amount = mine_tx.amount
+            sender=mine_tx['sender'],
+            recipient= mine_tx['recipient'],
+            amount = mine_tx['amount']
             )
 
     # Forge the new Block by adding it to the chain
@@ -382,9 +382,9 @@ def mine_server():
     mine_tx = {'sender': "0", 'recipient':node_identifier, 'amount': 25}
     if mine_tx not in blockchain.current_transactions:
         blockchain.new_transaction(
-            sender=mine_tx.sender,
-            recipient= mine_tx.node_identifier,
-            amount = mine_tx.amount
+            sender=mine_tx['sender'],
+            recipient= mine_tx['recipient'],
+            amount = mine_tx['amount']
             )
 
     # Forge the new Block by adding it to the chain
