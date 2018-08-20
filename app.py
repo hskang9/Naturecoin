@@ -379,7 +379,7 @@ def mine_server():
         print(response)
         return 501
 
-    mine_tx = {'sender': "0", 'recipient':node_identifier, amount=25}
+    mine_tx = {'sender': "0", 'recipient':node_identifier, 'amount': 25}
     if mine_tx not in blockchain.current_transactions:
         blockchain.new_transaction(
             sender=mine_tx.sender,
