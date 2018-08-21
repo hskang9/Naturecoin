@@ -23,33 +23,11 @@ class Blockchain:
         self.num_transactions = ['transactions', 0,]
         self.num_coins = ['coins', 0,]
 
-        # Check if the chaindata exists 
-        if os.path.isfile('chain.json'):
-            self.sync()
-            return            
 
         # Create the genesis block
         self.new_block(previous_hash='1', proof=100)
 
 
-    def sync(self):
-        with open('chain.json', 'r') as f:
-            chaindata = json.loads(f.read())
-            # Remove 'u' chars
-            chaindata = ast.literal_eval(json.dumps(chaindata))
-
-            # Synchronize chaindata
-            self.timestamps = ['x', chaindata[0]['timestamp']]
-            for block in chaindata[1:]:
-                self.timestamps.append(block['timestamp'])
-                self.num_transactions.append(len(block['transactions']))
-                self.num_users.append(len(set([i['sender'] for i in block['transactions']] + [j['recipient'] for j in block['transactions']])))
-                self.num_coins.append(sum([int(i['amount']) for i in block['transactions']]) + self.num_coins[-1])
-        # Change blockchain data
-        self.chain = chaindata
-
-        print(self.timestamps)
-        print(self.num_transactions)
 
     def register_node(self, address):
         """
@@ -254,7 +232,7 @@ if os.path.isfile('chain.json'):
         chaindata = json.loads(f.read())
         # Remove 'u' chars
         chaindata = ast.literal_eval(json.dumps(chaindata))
-        
+        blockchain.timestamps = ['x', chaindata[0]['timestamp'], chaindata[0]['timestamp']]        
         # Analyze the data
         for block in chaindata:
             blockchain.timestamps.append(block['timestamp'])
