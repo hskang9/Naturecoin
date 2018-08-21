@@ -7,7 +7,7 @@ import requests
 from flask import Flask, jsonify, request, render_template
 import atexit
 import datetime
-
+import os
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
@@ -23,8 +23,33 @@ class Blockchain:
         self.num_transactions = ['transactions', 0,]
         self.num_coins = ['coins', 0,]
 
+        # Check if the chaindata exists 
+        if os.path.isfile('chain.json'):
+            self.sync()
+            return            
+
         # Create the genesis block
         self.new_block(previous_hash='1', proof=100)
+
+
+    def sync(self):
+        with open('chain.json', 'r') as f:
+            chaindata = json.loads(f.read())
+            # Remove 'u' chars
+            chaindata = ast.literal_eval(json.dumps(chaindata))
+
+            # Synchronize chaindata
+            self.timestamps = ['x', chaindata[0]['timestamp']]
+            for block in chaindata[1:]:
+                self.timestamps.append(block['timestamp'])
+                self.num_transactions.append(len(block['transactions']))
+                self.num_users.append(len(set([i['sender'] for i in block['transactions']] + [j['recipient'] for j in block['transactions']])))
+                self.num_coins.append(sum([int(i['amount']) for i in block['transactions']]) + self.num_coins[-1])
+        # Change blockchain data
+        self.chain = chaindata
+
+        print(self.timestamps)
+        print(self.num_transactions)
 
     def register_node(self, address):
         """
@@ -223,8 +248,24 @@ node_identifier = str(uuid4()).replace('-', '')
 # Instantiate the Blockchain
 blockchain = Blockchain()
 
+# Check if the chaindata exists 
+if os.path.isfile('chain.json'):
+   with open('chain.json', 'r') as f:
+        chaindata = json.loads(f.read())
+        # Remove 'u' chars
+        chaindata = ast.literal_eval(json.dumps(chaindata))
+        
+        # Analyze the data
+        for block in chaindata:
+            blockchain.timestamps.append(block['timestamp'])
+            blockchain.num_transactions.append(len(block['transactions']))
+            blockchain.num_users.append(len(set([i['sender'] for i in block['transactions']] + [j['recipient'] for j in block['transactions']])))
+            blockchain.num_coins.append(sum([int(i['amount']) for i in block['transactions']]) + blockchain.num_coins[-1]) 
+        # Change blockchain data
+        blockchain.chain = chaindata
 
-
+        print(blockchain.timestamps)
+        print(blockchain.num_transactions)
 @app.route('/mine', methods=['GET'])
 def mine():
     # We run the proof of work algorithm to get the next proof...
@@ -371,6 +412,13 @@ def visualize():
 
 # Mine(Confirm a block) from server
 def mine_server():
+    # Throw if there is no current transaction
+    if len(blockchain.current_transactions) == 0:
+        response = {'message': 'There is no current transaction to confirm a block'}
+        print(response)
+        return 501
+
+
     # We run the proof of work algorithm to get the next proof...
     last_block = blockchain.last_block
     last_proof = last_block['proof']
@@ -378,11 +426,6 @@ def mine_server():
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
-    if len(blockchain.current_transactions) == 0:
-        response = {'message': 'There is no current transaction to confirm a block'}
-        print(response)
-        return 501
-
     mine_tx = {'sender': "0", 'recipient':node_identifier, 'amount': 25}
     if mine_tx not in blockchain.current_transactions:
         blockchain.new_transaction(
@@ -393,6 +436,8 @@ def mine_server():
 
     # Forge the new Block by adding it to the chain
     block = blockchain.new_block(proof)
+    
+    # Update Chaindata
     with open('chain.json', 'w') as outfile:
         json.dump(blockchain.chain, outfile)
 
@@ -425,6 +470,6 @@ if __name__ == '__main__':
     # init BackgroundScheduler job
     scheduler = BackgroundScheduler()
     # in your case you could change seconds to hours
-    scheduler.add_job(monitor, trigger='interval', seconds=3)
+    scheduler.add_job(monitor, trigger='interval', seconds=15)
     scheduler.start()
     app.run(host='0.0.0.0', port=port)
