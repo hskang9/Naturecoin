@@ -248,6 +248,8 @@ def mine():
 
     # Forge the new Block by adding it to the chain
     block = blockchain.new_block(proof)
+    
+    # Update the chaindata
     with open('chain.json', 'w') as outfile:
         json.dump(blockchain.chain, outfile)
 
@@ -270,7 +272,8 @@ def add_block():
     required = ['index', 'previous_hash', 'proof', 'timestamp', 'transactions' ]
     if not all(k in block for k in required):
         return 'Missing values', 400
-
+    # Remove 'u' chars
+    block = ast.literal_eval(json.dumps(block))
     # Validate the block
     last_block = blockchain.last_block
     last_proof = last_block['proof']
