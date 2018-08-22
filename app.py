@@ -311,6 +311,7 @@ def add_block():
 def new_transaction():
     values = request.get_json() or request.form
 
+    print(values)
     # Check that the required fields are in the POST'ed data
     required = ['sender', 'recipient', 'amount']
     if not all(k in values for k in required):
@@ -318,7 +319,7 @@ def new_transaction():
     # Remove 'u' chars
     values = ast.literal_eval(json.dumps(values))
     # Create a new Transaction
-    index = blockchain.new_transaction(values["sender"], values["recipient"], values["amount"])
+    index = blockchain.new_transaction(values["sender"], values["recipient"], float(values["amount"]))
 
     response = {'message': 'Transaction will be added to Block {}'.format(index)}
     return jsonify(response), 200
