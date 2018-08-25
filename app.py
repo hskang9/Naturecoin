@@ -298,6 +298,10 @@ def add_block():
     last_proof = last_block['proof']
     if blockchain.valid_proof(last_proof, block.get('proof')):
         blockchain.chain.append(block)
+        blockchain.timestamps.append(block['timestamp'])
+        blockchain.num_transactions.append(len(block['transactions']))
+        blockchain.num_users.append(len(set([i['sender'] for i in block['transactions']] + [j['recipient'] for j in block['transactions']])))
+        blockchain.num_coins.append(sum([int(i['amount']) for i in block['transactions']]) + blockchain.num_coins[-1])
         response = {
         'message': 'Block is broadcasted',
         }
