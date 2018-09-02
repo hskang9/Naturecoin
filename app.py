@@ -261,7 +261,7 @@ def mine():
         response = {'message': 'There is no current transaction to confirm a block'}
         return jsonify(response), 501
 
-    mine_tx = {'sender': "0", 'recipient':node_identifier, 'amount': 25}
+    mine_tx = {'sender': "coinbase", 'recipient':node_identifier, 'amount': 25}
     if mine_tx not in blockchain.current_transactions:
         blockchain.new_transaction(
             sender=mine_tx['sender'],
@@ -413,7 +413,7 @@ def mine_server():
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
-    mine_tx = {'sender': "0", 'recipient':node_identifier, 'amount': 25}
+    mine_tx = {'sender': "coinbase", 'recipient':node_identifier, 'amount': 25}
     if mine_tx not in blockchain.current_transactions:
         blockchain.new_transaction(
             sender=mine_tx['sender'],
